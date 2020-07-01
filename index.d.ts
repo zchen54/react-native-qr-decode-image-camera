@@ -1,6 +1,6 @@
 declare module "react-native-qr-decode-image-camera";
 
-interface QRScannerProps {
+export interface QRScannerProps {
   isRepeatScan?: boolean;
   onRead: (res: string) => void;
   maskColor?: string;
