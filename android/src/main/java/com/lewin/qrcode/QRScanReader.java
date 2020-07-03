@@ -38,29 +38,30 @@ public class QRScanReader extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void readerQR(String fileUrl, Promise promise ) {
+    public void readerQR(String fileUrl, Promise promise) {
         Result result = scanningImage(fileUrl);
-        if(result == null){
-            promise.reject("404","No related QR code");
-//            result = decodeBarcodeRGB(fileUrl);
-//            if(result == null){
-//                result = decodeBarcodeYUV(fileUrl);
-//                if(result == null){
-//                    promise.reject("404","No related QR code");
-//                }else{
-//                    promise.resolve(result.getText());
-//                }
-//            }else{
-//                promise.resolve(result.getText());
-//            }
+        if (result == null) {
+            promise.reject("404", "No related QR code");
+            result = decodeBarcodeRGB(fileUrl);
+            if (result == null) {
+                result = decodeBarcodeYUV(fileUrl);
+                if (result == null) {
+                    promise.reject("404", "No related QR code");
+                } else {
+                    promise.resolve(result.getText());
+                }
+            } else {
+                promise.resolve(result.getText());
+            }
 
-        }else{
+        } else {
             promise.resolve(result.getText());
         }
     }
 
     /**
      * Method for scanning QR code pictures
+     * 
      * @param path
      * @return
      */
@@ -69,7 +70,7 @@ public class QRScanReader extends ReactContextBaseJavaModule {
             return null;
         }
         Hashtable<DecodeHintType, String> hints = new Hashtable<>();
-        hints.put(DecodeHintType.CHARACTER_SET, "UTF8"); //Set the encoding of QR code content
+        hints.put(DecodeHintType.CHARACTER_SET, "UTF8"); // Set the encoding of QR code content
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true; // Get the original size first
@@ -80,11 +81,11 @@ public class QRScanReader extends ReactContextBaseJavaModule {
             sampleSize = 1;
         options.inSampleSize = sampleSize;
         scanBitmap = BitmapFactory.decodeFile(path, options);
-        int width=scanBitmap.getWidth();
-        int height=scanBitmap.getHeight();
-        int[] pixels=new int[width*height];
-        scanBitmap.getPixels(pixels,0,width,0,0,width,height);//Get picture pixels
-        RGBLuminanceSource source = new RGBLuminanceSource(scanBitmap.getWidth(),scanBitmap.getHeight(),pixels);
+        int width = scanBitmap.getWidth();
+        int height = scanBitmap.getHeight();
+        int[] pixels = new int[width * height];
+        scanBitmap.getPixels(pixels, 0, width, 0, 0, width, height);// Get picture pixels
+        RGBLuminanceSource source = new RGBLuminanceSource(scanBitmap.getWidth(), scanBitmap.getHeight(), pixels);
         BinaryBitmap bitmap1 = new BinaryBitmap(new HybridBinarizer(source));
         QRCodeReader reader = new QRCodeReader();
         try {
@@ -176,13 +177,13 @@ public class QRScanReader extends ReactContextBaseJavaModule {
         }
         int width = barcode.getWidth();
         int height = barcode.getHeight();
-        //Store the pixels of the picture in argb mode
+        // Store the pixels of the picture in argb mode
         int[] argb = new int[width * height];
         barcode.getPixels(argb, 0, width, 0, 0, width, height);
-        //Convert argb to yuv
+        // Convert argb to yuv
         byte[] yuv = new byte[width * height * 3 / 2];
         encodeYUV420SP(yuv, argb, width, height);
-        //Analyze the QR code of the YUV encoding method
+        // Analyze the QR code of the YUV encoding method
         Result result = decodeBarcodeYUV(yuv, width, height);
 
         barcode.recycle();
@@ -204,8 +205,7 @@ public class QRScanReader extends ReactContextBaseJavaModule {
         multiFormatReader.setHints(null);
 
         Result rawResult = null;
-        PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(yuv, width, height, 0, 0,
-                width, height, false);
+        PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(yuv, width, height, 0, 0, width, height, false);
         if (source != null) {
             BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
             try {
@@ -221,12 +221,9 @@ public class QRScanReader extends ReactContextBaseJavaModule {
         return rawResult;
     }
 
-
     /**
-     * The formula for RGB to YUV is:
-     * Y=0.299R+0.587G+0.114B;
-     * U=-0.147R-0.289G+0.436B;
-     * V=0.615R-0.515G-0.1B;
+     * The formula for RGB to YUV is: Y=0.299R+0.587G+0.114B;
+     * U=-0.147R-0.289G+0.436B; V=0.615R-0.515G-0.1B;
      *
      * @param yuv
      * @param argb
@@ -260,8 +257,10 @@ public class QRScanReader extends ReactContextBaseJavaModule {
                 Y = Math.max(0, Math.min(Y, 255));
                 U = Math.max(0, Math.min(U, 255));
                 V = Math.max(0, Math.min(V, 255));
-                // NV21 has a plane of Y and interleaved planes of VU each sampled by a factor of 2
-                // meaning for every 4 Y pixels there are 1 V and 1 U. Note the sampling is every other
+                // NV21 has a plane of Y and interleaved planes of VU each sampled by a factor
+                // of 2
+                // meaning for every 4 Y pixels there are 1 V and 1 U. Note the sampling is
+                // every other
                 // pixel AND every other scan line.
                 // ---Y---
                 yuv[yIndex++] = (byte) Y;
